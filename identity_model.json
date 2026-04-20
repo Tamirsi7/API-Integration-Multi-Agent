@@ -1,0 +1,88 @@
+{
+  "_meta": {
+    "version": "2.0",
+    "description": "the platform canonical data model. Defines the target fields for mapping any SaaS application's API to canonical entities. Sub-agents map API fields to these canonical names.",
+    "entities": ["Account", "Group", "Role", "Resource"],
+    "zero_hallucination": "If a field cannot be confirmed in official API documentation, set its mapped value to: 'Data unavailable in public documentation'"
+  },
+
+  "Account": {
+    "description": "An individual identity — human user or Non-Human Identity (NHI: service account, API key, bot).",
+    "canonical_fields": [
+      {"field": "id",           "type": "string",   "required": true},
+      {"field": "email",        "type": "string",   "required": false},
+      {"field": "display_name", "type": "string",   "required": true,  "note": "Full name, username, or label"},
+      {"field": "status",       "type": "enum",     "required": true,  "values": "active|inactive|suspended|pending|unknown"},
+      {"field": "account_type", "type": "enum",     "required": true,  "values": "human|service_account|api_key|bot|system|unknown"},
+      {"field": "created_at",   "type": "datetime", "required": false},
+      {"field": "last_login",   "type": "datetime", "required": false},
+      {"field": "external_id",  "type": "string",   "required": false, "note": "App's native primary key if different from id"}
+    ]
+  },
+
+  "Group": {
+    "description": "A collection of Accounts with shared permissions. May be called Team, Department, Organization, or Workspace.",
+    "canonical_fields": [
+      {"field": "id",           "type": "string",  "required": true},
+      {"field": "name",         "type": "string",  "required": true},
+      {"field": "description",  "type": "string",  "required": false},
+      {"field": "type",         "type": "string",  "required": false, "note": "team|department|org|workspace|project"},
+      {"field": "member_count", "type": "integer", "required": false},
+      {"field": "parent_id",    "type": "string",  "required": false, "note": "For nested groups or org hierarchies"},
+      {"field": "created_at",   "type": "datetime","required": false}
+    ]
+  },
+
+  "Role": {
+    "description": "A privilege level or permission set assigned to Accounts or Groups.",
+    "canonical_fields": [
+      {"field": "id",          "type": "string",  "required": true},
+      {"field": "name",        "type": "string",  "required": true,  "note": "e.g. admin, viewer, editor, owner, member"},
+      {"field": "description", "type": "string",  "required": false},
+      {"field": "scope",       "type": "enum",    "required": true,  "values": "global|per_resource|per_group|per_org|custom"},
+      {"field": "permissions", "type": "array",   "required": false, "note": "Fine-grained permission strings if available"},
+      {"field": "is_builtin",  "type": "boolean", "required": false, "note": "true = system-defined, false = custom role"}
+    ],
+    "modeling_approaches": [
+      {"approach": "inline_on_user",       "description": "Role is a field on the user object"},
+      {"approach": "separate_role_objects", "description": "Roles are independent objects with their own endpoint"},
+      {"approach": "permission_sets",      "description": "Fine-grained permission flags instead of named roles"},
+      {"approach": "scoped_roles",         "description": "Different roles per resource (e.g. admin of repo1, viewer of repo2)"}
+    ]
+  },
+
+  "Resource": {
+    "description": "An object that Accounts or Groups have access to — the 'object of access'.",
+    "canonical_fields": [
+      {"field": "id",         "type": "string",   "required": true},
+      {"field": "name",       "type": "string",   "required": true},
+      {"field": "type",       "type": "string",   "required": true,  "note": "repository|project|workspace|dashboard|bucket|database|pipeline"},
+      {"field": "owner_id",   "type": "string",   "required": false, "note": "Account ID or Group ID that owns this resource"},
+      {"field": "visibility", "type": "enum",     "required": false, "values": "public|private|internal|unknown"},
+      {"field": "created_at", "type": "datetime", "required": false}
+    ]
+  },
+
+  "Relations": {
+    "description": "How the 4 entities relate. Every integration must describe all 5 relationships.",
+    "Account_to_Group":    {"cardinality": "many-to-many", "type": "membership",    "description": "An Account belongs to Groups; a Group contains Accounts."},
+    "Account_to_Role":     {"cardinality": "many-to-many", "type": "assignment",    "description": "An Account is assigned Roles (inline, separate, or scoped per resource)."},
+    "Account_to_Resource": {"cardinality": "many-to-many", "type": "access_grant",  "description": "An Account has direct access grants to Resources."},
+    "Group_to_Role":       {"cardinality": "many-to-many", "type": "assignment",    "description": "A Group is assigned a Role, granting it to all member Accounts."},
+    "Group_to_Resource":   {"cardinality": "many-to-many", "type": "access_grant",  "description": "A Group has access to a Resource, granting access to all members."}
+  },
+
+  "Remediation": {
+    "description": "Standard actions the platform can perform. Every integration PRD must document the API endpoints for each available action.",
+    "standard_actions": [
+      {"action": "add_user_to_group",      "description": "Add an Account to a Group/Team"},
+      {"action": "remove_user_from_group",  "description": "Remove an Account from a Group/Team"},
+      {"action": "add_user_to_resource",    "description": "Grant an Account direct access to a Resource"},
+      {"action": "remove_user_from_resource","description": "Revoke an Account's direct access to a Resource"},
+      {"action": "change_user_role",         "description": "Change the Role assigned to an Account"},
+      {"action": "change_group_role",        "description": "Change the Role assigned to a Group on a Resource"},
+      {"action": "suspend_account",          "description": "Deactivate an Account without deleting it"},
+      {"action": "deprovision_account",      "description": "Permanently remove an Account from the application"}
+    ]
+  }
+}

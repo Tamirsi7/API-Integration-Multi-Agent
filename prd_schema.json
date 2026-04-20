@@ -1,0 +1,169 @@
+{
+  "_comment": "Lightweight PRD schema reference. This is the single source of truth for the structure that identity-mapper outputs and notion_writer.py consumes. Not a formal JSON Schema — just an annotated example.",
+
+  "app_name": "string — the SaaS application name",
+
+  "api_version": "string — e.g. 'REST API v3', 'Graph API 1.0', 'v2'. Use exact version string from official docs. If not explicitly stated: 'Data unavailable in public documentation'",
+
+  "sync_order": [
+    {
+      "_type": "array of step objects — ordered sync execution plan with dependency rationale",
+      "step": "integer — execution order (1, 2, 3...)",
+      "entities": ["array of entity type strings to fetch in this step"],
+      "rationale": "string — why these entities go in this step, what data dependencies exist"
+    }
+  ],
+
+  "developer_summary": "string — 3-4 sentences. Critical technical takeaways, potential bottlenecks, and gotchas the developer must keep in mind while building this integration. Include cross-cutting concerns like rate limit strategy, pagination traps, and NHI discovery approach.",
+
+  "data_source": {
+    "type": "openapi_spec | html_docs | mixed",
+    "spec_url": "string or 'Data unavailable in public documentation'",
+    "docs_url": "string"
+  },
+
+  "overview": {
+    "bottom_line": "string — 1-2 sentence engineering-focused summary starting with 🎯 The Bottom Line:. What is the ONE thing an engineer must understand about this app's identity model?",
+    "description": "string — what the app does, framed from a security/identity perspective (not marketing)",
+    "integration_purpose": "string — why the platform integrates with this app. Structure as Read-Path (visibility) and Write-Path (remediation) objectives.",
+    "_confidence": {"score": "integer 1-10", "source": "string", "justification": "string"}
+  },
+
+  "authentication": {
+    "bottom_line": "string — 🎯 The Bottom Line: Which auth method to use and why, in one sentence.",
+    "method": "string — OAuth 2.0 | API Key | Bearer | Basic Auth",
+    "credentials_required": ["array of strings"],
+    "scopes_required": ["array of exact scope names"],
+    "token_endpoint": "string",
+    "notes": "string",
+    "_confidence": {"score": "integer 1-10", "source": "string", "justification": "string"}
+  },
+
+  "rate_limits": {
+    "bottom_line": "string — 🎯 The Bottom Line: The critical rate limit constraint and its production impact.",
+    "limit": "string — e.g. 5000 req/hour",
+    "scope": "string — per token | per user | per IP",
+    "relevant_headers": ["array of exact header names"],
+    "retry_strategy": "string",
+    "_confidence": {"score": "integer 1-10", "source": "string", "justification": "string"}
+  },
+
+  "pagination": {
+    "bottom_line": "string — 🎯 The Bottom Line: How many strategies are needed and any hard limits to watch for.",
+    "strategy": "string — cursor | offset | keyset | page-based | link-header. If multiple strategies exist for different endpoints, describe each as 'Strategy A: cursor (for X endpoints), Strategy B: offset (for Y endpoints)'",
+    "request_params": ["array of param names"],
+    "response_fields": ["array of field names"],
+    "notes": "string",
+    "_confidence": {"score": "integer 1-10", "source": "string", "justification": "string"}
+  },
+
+  "entity_accounts": {
+    "bottom_line": "string — 🎯 The Bottom Line: What makes this app's account model unique for identity ingestion.",
+    "list_endpoint": "HTTP METHOD /path",
+    "get_endpoint": "HTTP METHOD /path/{id}",
+    "key_response_fields": {
+      "_type": "dict — the platform field name → API field name string OR {api_field: string, notes: string} object. Use object form when a field needs critical engineering context (derivation logic, CRITICAL flags, caveats).",
+      "id": "app field name",
+      "email": "app field name",
+      "display_name": "app field name",
+      "status": "app field name + possible values",
+      "account_type": "app field name + possible values"
+    },
+    "human_vs_nonhuman": "string — detection logic for this specific app. Include NHI mitigation strategy if direct detection is impossible (e.g., Audit Log synthesis).",
+    "filter_params": ["array of filter param names"],
+    "architecture_warnings": ["array of strings — each a named warning with Action Required prescription. E.g., '🚨 Architecture Warning - The Dual API Inventory: Active users come from API A, deactivated from API B. Action Required: Merge both result sets, join on email.'"],
+    "notes": "string",
+    "_confidence": {"score": "integer 1-10", "source": "string", "justification": "string"}
+  },
+
+  "entity_groups": {
+    "bottom_line": "string — 🎯 The Bottom Line: Key structural characteristic of groups in this app.",
+    "list_endpoint": "HTTP METHOD /path",
+    "get_endpoint": "HTTP METHOD /path/{id}",
+    "members_endpoint": "HTTP METHOD /path/{id}/members",
+    "key_response_fields": {
+      "_type": "dict — the platform field name → API field name string OR {api_field: string, notes: string} object.",
+      "id": "app field name",
+      "name": "app field name",
+      "description": "app field name",
+      "type": "app field name",
+      "member_count": "app field name"
+    },
+    "architecture_warnings": ["array of strings — named warnings about group structure, membership resolution, hierarchy, etc."],
+    "notes": "string",
+    "_confidence": {"score": "integer 1-10", "source": "string", "justification": "string"}
+  },
+
+  "entity_roles": {
+    "bottom_line": "string — 🎯 The Bottom Line: How this app models permissions and any traps.",
+    "modeling_approach": "inline_on_user | separate_role_objects | permission_sets | scoped_roles",
+    "list_endpoint": "HTTP METHOD /path or 'Data unavailable in public documentation'",
+    "assignment_endpoint": "string",
+    "key_response_fields": {
+      "_type": "dict — the platform field name → API field name string OR {api_field: string, notes: string} object.",
+      "id": "app field name",
+      "name": "app field name",
+      "scope": "app field name",
+      "permissions": "app field name"
+    },
+    "architecture_warnings": ["array of strings — warnings about admin flags outside role system, tier-dependent behavior, permission black boxes, etc."],
+    "notes": "string",
+    "_confidence": {"score": "integer 1-10", "source": "string", "justification": "string"}
+  },
+
+  "entity_resources": {
+    "bottom_line": "string — 🎯 The Bottom Line: What resources exist and how access is governed (ACL vs ownership vs permission-set-driven).",
+    "resource_types": ["array of resource type names"],
+    "list_endpoints": {
+      "_type": "dict — resource type → HTTP METHOD /path. Include Search API endpoints if resources are fetched via search.",
+      "ResourceType": "HTTP METHOD /path"
+    },
+    "access_list_endpoint": "string — explicit ACL endpoint, or describe property-driven access model (e.g., 'Property-driven: read owner_id from resource object')",
+    "key_response_fields": {
+      "_type": "dict — the platform field name → API field name string OR {api_field: string, notes: string} object. Use object form for owner_id with CRITICAL tag.",
+      "id": "app field name",
+      "name": "app field name",
+      "type": "app field name",
+      "owner_id": "app field name",
+      "visibility": "app field name"
+    },
+    "architecture_warnings": ["array of strings — warnings about access model, search API pagination limits, ownership vs ACL patterns, etc."],
+    "notes": "string",
+    "_confidence": {"score": "integer 1-10", "source": "string", "justification": "string"}
+  },
+
+  "entity_relations": {
+    "bottom_line": "string — 🎯 The Bottom Line: How relationships are resolved in this app (embedded vs property-driven vs separate endpoints).",
+    "account_to_group":    {"resolution_strategy": "embedded_on_object | property_driven | separate_endpoint | client_side_aggregation | data_limitation", "description": "string", "endpoint": "HTTP METHOD /path", "doc_url": "string"},
+    "account_to_role":     {"resolution_strategy": "embedded_on_object | property_driven | separate_endpoint | client_side_aggregation | data_limitation", "description": "string", "endpoint": "HTTP METHOD /path", "doc_url": "string"},
+    "account_to_resource": {"resolution_strategy": "embedded_on_object | property_driven | separate_endpoint | client_side_aggregation | data_limitation", "description": "string", "endpoint": "HTTP METHOD /path", "doc_url": "string"},
+    "group_to_role":       {"resolution_strategy": "embedded_on_object | property_driven | separate_endpoint | client_side_aggregation | data_limitation", "description": "string", "endpoint": "HTTP METHOD /path", "doc_url": "string"},
+    "group_to_resource":   {"resolution_strategy": "embedded_on_object | property_driven | separate_endpoint | client_side_aggregation | data_limitation", "description": "string", "endpoint": "HTTP METHOD /path", "doc_url": "string"},
+    "architecture_warnings": ["array of strings — warnings about N+1 queries, embedded data resolution, ownership model, etc."],
+    "_confidence": {"score": "integer 1-10", "source": "string", "justification": "string"}
+  },
+
+  "remediation_actions": {
+    "bottom_line": "string — 🎯 The Bottom Line: Key architectural patterns for write-path actions (e.g., PUT full-replace vs PATCH partial-update).",
+    "architecture_warnings": ["array of strings — warnings about PUT vs PATCH semantics, indirect remediation paths, etc."],
+    "actions": [
+      {
+        "action_name": "string — e.g. Add User to Group",
+        "http_method": "GET|POST|PUT|PATCH|DELETE|N/A",
+        "endpoint": "/path or 'N/A' for unsupported actions",
+        "request_body": "string — JSON structure or description",
+        "required_scopes": ["array of scope names"],
+        "notes": "string — include 'Indirect — via [mechanism]' for workaround-based actions",
+        "_confidence": {"score": "integer 1-10", "source": "string", "justification": "string"}
+      }
+    ]
+  },
+
+  "technical_references": [
+    {
+      "section": "string — which PRD section this reference belongs to",
+      "label": "string — human-readable link text",
+      "url": "string — direct URL to official API documentation"
+    }
+  ]
+}

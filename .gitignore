@@ -1,0 +1,25 @@
+# Environment — never commit credentials
+.env
+
+# Python artifacts
+*.pyc
+*.pyo
+__pycache__/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temp files
+/tmp/*.json
