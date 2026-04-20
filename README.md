@@ -12,7 +12,8 @@
 
 ## TL;DR
 
-- **What:** An AI agent system that researches any SaaS application's REST API and auto-generates a structured, 11-section integration PRD (Product Requirements Document) - published directly to Notion. ![Example](www.notion.so/Anthropic-API-Integration-Spec-348a17b6ba9680929908e53188541d3b?source=copy_link)
+- **What:** An AI agent system that researches any SaaS application's REST API and auto-generates a structured, 11-section integration PRD (Product Requirements Document) - published directly to Notion. An Example:
+  www.notion.so/Anthropic-API-Integration-Spec-348a17b6ba9680929908e53188541d3b?source=copy_link
 - **Why:** Manual API research for enterprise identity integrations takes weeks per app. This pipeline does it in minutes, with confidence scoring on every field and zero invented data.
 - **How:** One slash command (`/integration <AppName>`) spawns 7 specialized Claude AI sub-agents in parallel - each with a narrow research focus - then merges, validates, and publishes the result.
 
